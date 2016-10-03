@@ -52,7 +52,6 @@ class PowerTrackClient:
         self.worker.start()
 
     def connected(self):
-
         return not self.worker.stopped()
 
     def disconnect(self):
