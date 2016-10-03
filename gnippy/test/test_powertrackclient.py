@@ -35,6 +35,7 @@ def iter_lines_generator():
         yield "arbitrary string value {0}".format(n)
         n += 1
 
+
 def get_request_stream(url, auth, stream):
 
     mocked_stream = mock.MagicMock()
@@ -220,4 +221,3 @@ class PowerTrackClientTestCase(unittest.TestCase):
         client.disconnect()
 
         self.assertFalse(client.connected())
-
