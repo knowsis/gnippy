@@ -35,7 +35,6 @@ def iter_lines_generator():
         yield "arbitrary string value {0}".format(n)
         n += 1
 
-
 def get_request_stream(url, auth, stream):
 
     mocked_stream = mock.MagicMock()
@@ -221,3 +220,34 @@ class PowerTrackClientTestCase(unittest.TestCase):
         client = PowerTrackClient(_dummy_callback, config_file_path=config_file)
 
         self.assertRaises(AssertionError, client.connect, backfill_minutes)
+
+    @mock.patch('requests.get', get_exception)
+    def test_connected_status_after_exception_is_false(self):
+        """ When an exception is thrown the client is no longer connected. """
+        test_utils.generate_test_config_file()
+
+        client = PowerTrackClient(_dummy_callback,
+                                  config_file_path=config_file)
+        client.connect()
+
+        sleep(2)
+
+        self.assertFalse(client.connected())
+
+        client.disconnect()
+
+    @mock.patch('requests.get', get_request_stream)
+    def test_connected_status_true_when_running(self):
+        """ Once the client connect method is called the client reports as connected. """
+        test_utils.generate_test_config_file()
+
+        client = PowerTrackClient(_dummy_callback,
+                                  config_file_path=config_file)
+
+        client.connect()
+
+        self.assertTrue(client.connected())
+
+        client.disconnect()
+
+        self.assertFalse(client.connected())
