@@ -28,6 +28,9 @@ class PowerTrackClient():
         self.worker.setDaemon(True)
         self.worker.start()
 
+    def connected(self):
+        return not self.worker.stopped()
+
     def disconnect(self):
         self.worker.stop()
         self.worker.join()
@@ -67,14 +70,29 @@ class Worker(threading.Thread):
         return self._stop_event.isSet()
 
     def run(self):
-        with closing(requests.get(self.url, auth=self.auth, stream=True)) as r:
-            if r.status_code != 200:
+
+        try:
+            with closing(requests.get(self.url, auth=self.auth, stream=True)) as r:
+                if r.status_code != 200:
+                    self.stop()
+
+                    raise Exception("GNIP returned HTTP {0} {1}".format(r.status_code, r.content))
+
+                for line in r.iter_lines():
+                    if line:
+                        self.on_data(line)
+
+                    if self.stopped():
+                        break
+
+        except Exception:
+            if self.on_error:
+                exinfo = sys.exc_info()
+                self.on_error(exinfo)
+            else:
+                # re-raise the last exception as-is
+                raise
+        finally:
+            if not self.stopped():
+                #  if we reach here we have been disconnected by GNIP, clean up by setting the stop Event
                 self.stop()
-                raise Exception("GNIP returned HTTP {}".format(r.status_code))
-
-            for line in r.iter_lines():
-                if line:
-                    self.on_data(line)
-
-                if self.stopped():
-                    break
