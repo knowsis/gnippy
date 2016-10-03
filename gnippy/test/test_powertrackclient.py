@@ -137,6 +137,7 @@ class PowerTrackClientTestCase(unittest.TestCase):
                                   config_file_path=config_file)
         client.connect()
         client.disconnect()
+
         self.assertTrue(exception_callback.called)
         actual_exinfo = exception_callback.call_args[0][0]
         actual_ex = actual_exinfo[1]
@@ -173,3 +174,50 @@ class PowerTrackClientTestCase(unittest.TestCase):
         client.disconnect()
 
         self.assertFalse(client.connected())
+
+    @mock.patch('requests.get')
+    def test_backfill_value_appended_to_url(self, mocked_requests_get):
+        """When passing a backfill value it is appended to the url call to
+        GNIP"""
+
+        backfill_minutes = 3
+
+        expected_powertrack_url = "{0}?backfillMinutes={1}".format(
+            test_utils.test_powertrack_url, backfill_minutes)
+
+        test_utils.generate_test_config_file()
+
+        client = PowerTrackClient(_dummy_callback, config_file_path=config_file)
+
+        client.connect(backfill_minutes=backfill_minutes)
+        client.disconnect()
+
+        mocked_requests_get.assert_called_with(
+            expected_powertrack_url,
+            auth=(test_utils.test_username, test_utils.test_password),
+            stream=True
+        )
+
+    def test_non_integer_backfill_value_raises_exception(self):
+        """When passing a backfill value that isn't an integer raises an
+        exception"""
+
+        backfill_minutes = "FOUR"
+
+        test_utils.generate_test_config_file()
+
+        client = PowerTrackClient(_dummy_callback, config_file_path=config_file)
+
+        self.assertRaises(AssertionError, client.connect, backfill_minutes)
+
+    def test_backfill_value_greater_than_five_raises_exception(self):
+        """When passing a backfill value that isn't an integer raises an
+        exception"""
+
+        backfill_minutes = 12
+
+        test_utils.generate_test_config_file()
+
+        client = PowerTrackClient(_dummy_callback, config_file_path=config_file)
+
+        self.assertRaises(AssertionError, client.connect, backfill_minutes)
