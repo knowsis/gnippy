@@ -102,7 +102,9 @@ class Worker(threading.Thread):
                 if r.status_code != 200:
                     self.stop()
                     raise Exception(
-                        "GNIP returned HTTP {}".format(r.status_code))
+                        "GNIP returned HTTP {0}.\n{1}".format(
+                            r.status_code,
+                            r.content)
 
                 for line in r.iter_lines():
                     if line:
