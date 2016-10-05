@@ -104,9 +104,10 @@ class Worker(threading.Thread):
                     raise Exception(
                         "GNIP returned HTTP {0}.\n{1}".format(
                             r.status_code,
-                            r.content)
+                            r.content))
 
                 for line in r.iter_lines():
+
                     if line:
                         self.on_data(line)
 
