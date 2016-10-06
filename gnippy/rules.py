@@ -24,8 +24,13 @@ def _generate_post_object(rules_list):
 
 def _check_rules_list(rules_list):
     """ Checks a rules_list to ensure that all rules are in the correct format. """
-    def fail():
-        msg = "rules_list is not in the correct format. Please use build_rule to build your rules list."
+    def fail(error=""):
+
+        msg = "Rules_list is not in the correct format. Please use build_rule to build your rules list."
+
+        if error:
+            msg = "{0}. {1}".format(msg, error)
+
         raise RulesListFormatException(msg)
 
     if not isinstance(rules_list, list):
@@ -34,24 +39,24 @@ def _check_rules_list(rules_list):
     expected = ("value", "tag")
     for r in rules_list:
         if not isinstance(r, dict):
-            fail()
+            fail("Rule is not a dict")
 
         if "value" not in r:
-            fail()
+            fail("Rule must contain value key")
 
         if not isinstance(r['value'], string_types):
-            fail()
+            fail("Value value must be a string")
 
         if "tag" in r:
             rule_tag = r['tag']
             if rule_tag is None or isinstance(rule_tag, string_types):
                 pass
             else:
-                fail()
+                fail("Rule tag value must be a string")
 
         for k in r:
             if k not in expected:
-                fail()
+                fail("Rule contains invalid key {0}".format(k))
 
 
 def _post(conf, built_rules):
